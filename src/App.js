@@ -10,7 +10,6 @@ import reducers from './reducers';
 import MoviesIndex from './components/movies_index';
 import MoviesShow from './components/movies_show';
 
-import logo from './logo.svg';
 import './App.css';
 
 const createStoreWithMiddleware = applyMiddleware(promise)(createStore);
