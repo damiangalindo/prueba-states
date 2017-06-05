@@ -92,7 +92,7 @@ class MoviesShow extends Component {
 
 function mapStateToProps(state) {
   return {
-    movie: state.movies
+    movie: state.movies.selected
   }
 }
 

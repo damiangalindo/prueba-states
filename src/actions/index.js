@@ -3,6 +3,7 @@ import axios from 'axios';
 export const FETCH_MOVIES = 'fetch_movies';
 export const FETCH_MOVIE = 'fetch_movie';
 export const FETCH_LIST = 'fetch_list';
+export const SEARCH_MOVIES = 'search_movies';
 
 const API_KEY = '?api_key=700fdd6812d76d59ed3111d7982bd90c'
 const ROOT_URL = 'https://api.themoviedb.org/3';
@@ -25,11 +26,22 @@ export function fetchMovie(id) {
   }
 }
 
-export function fetchLists(list) {
+export function fetchLists() {
   const request = axios.get(`${ ROOT_URL }/genre/movie/list${ API_KEY }`);
 
   return {
     type: FETCH_LIST,
+    payload: request
+  }
+}
+
+export function searchMovies(criteria) {
+  const query = criteria;
+
+  const request = axios.get(`${ ROOT_URL }/search/movie${ API_KEY }&query=${ query }`);
+
+  return {
+    type: SEARCH_MOVIES,
     payload: request
   }
 }

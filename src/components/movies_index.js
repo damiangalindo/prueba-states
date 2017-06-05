@@ -1,16 +1,41 @@
 import React, { Component } from 'react';
-import { fetchMovies, fetchLists } from '../actions';
+import { fetchMovies, fetchLists, searchMovies } from '../actions';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import { Link } from 'react-router-dom';
-import { Field, reduxForm } from 'redux-form';
 import queryString from 'query-string';
-// , formValueSelector
+
 class MoviesIndex extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      search: '',
+      keywords: '',
+      order: 'pop_asc',
+      year: '2016',
+      genres: ''
+    }
+
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
   componentDidMount() {
     const { page } = queryString.parse(this.props.location.search);
     this.props.fetchMovies(page || 1);
     this.props.fetchLists();
+  }
+
+  handleSubmit(event) {
+    this.props.searchMovies(this.state.search);
+    this.props.fetchLists();
+    event.preventDefault();
+  }
+
+  handleChange(event) {
+    const { name, value } = event.target;
+    this.setState({ [name]: value });
   }
 
   renderMovies(){
@@ -34,109 +59,86 @@ class MoviesIndex extends Component {
     }
   }
 
-  onSubmit(values){
-    console.log(values)
+  renderYearField() {
+    return(
+      <div className='form-group'>
+        <label>Year</label>
+        <select name='year' onChange={ this.handleChange } value={ this.state.year }>
+          <option value='2017'>2017</option>
+          <option value='2016'>2016</option>
+        </select>
+      </div>
+    )
   }
 
-  filterByField(field) {
-    console.log(field)
-    // console.log()
-    // this.props.submit(this .onSubmit())
-  }
+  renderGenresField() {
+    const { genres } = this.props;
 
-  renderField(field) {
-    const { name } = field.input;
-    switch (name) {
-      case 'genres':
-        const { genres } = this.props;
+    if (_.isEmpty(genres)) {
+      return <div>Loading...</div>
+    } else {
+      const options = _.map(genres, genre => {
+        return <option key={ genre.id } value={ genre.id }>{ genre.name }</option>
+      })
 
-        if (_.isEmpty(genres)) {
-          return <div>Loading...</div>
-        } else {
-          const options = _.map(genres, genre => {
-            return <option key={ genre.id } value={ genre.id }>{ genre.name }</option>
-          })
-
-          return(
-            <div className='form-group'>
-              <label>Genres</label>
-              <select id='genres'>
-                <option>Select a Genre</option>
-                { options }
-              </select>
-            </div>
-          )
-        }
-      case 'year':
-        return(
-          <div className='form-group'>
-            <label>Year</label>
-            <select id='year'>
-              <option value='2016'>2016</option>
-            </select>
-          </div>
-        )
-      case 'order':
-        return(
-          <div className='form-group'>
-            <label>Order by</label>
-            <select id='order' onChange={ event => this.filterByField(event.target.value) }>
-              <option value='pop_asc'>Popularity ascendent</option>
-              <option value='pop_desc'>Popularity descendent</option>
-              <option value='rating_asc'>Rating ascendent</option>
-              <option value='rating_desc'>Rating descendent</option>
-            </select>
-          </div>
-        )
-      case 'keywords':
-        return(
-          <div className='form-group'>
-            <label>Keywords</label>
-            <input id='keywords' name='keywords' placeholder='Search by keywords...'/>
-          </div>
-        )
-      case 'find':
-        return(
-          <div className='form-group'>
-            <input id='find' name='find' placeholder='Search...'/>
-          </div>
-        )
-      default:
-        return <div>{ name }</div>
+      return(
+        <div className='form-group'>
+          <label>Genres</label>
+          <select name='genres' onChange={ this.handleChange } value={ this.state.genres }>
+            <option>Select a Genre</option>
+            { options }
+          </select>
+        </div>
+      )
     }
   }
 
-  render() {
-    const { handleSubmit } = this.props;
+  renderOrderField() {
+    return(
+      <div className='form-group'>
+        <label>Order by</label>
+        <select name='order' onChange={ this.handleChange } value={ this.state.order }>
+          <option value='pop_asc'>Popularity ascendent</option>
+          <option value='pop_desc'>Popularity descendent</option>
+          <option value='rating_asc'>Rating ascendent</option>
+          <option value='rating_desc'>Rating descendent</option>
+        </select>
+      </div>
+    )
+  }
 
+  renderKeywordsField() {
+    return(
+      <div className='form-group'>
+        <label>Keywords</label>
+        <input type='text' name='keywords' value={ this.state.keywords } onChange={ this.handleChange } placeholder='Search by keywords...'/>
+      </div>
+    )
+  }
+
+  renderFindField() {
+    return(
+      <div className='form-group'>
+        <input type='text' name='search' value={ this.state.search } onChange={ this.handleChange } placeholder='Search...'/>
+      </div>
+    )
+  }
+
+  render() {
     return (
       <div>
         <h3>Movies Index</h3>
-        <form onSubmit={ handleSubmit(this.onSubmit.bind(this)) }>
-          <Field
-            name='find'
-            component={ this.renderField.bind(this) }
-          />
-          <div className='form-inline'>
-            <Field
-              name='year'
-              component={ this.renderField.bind(this) }
-            />
-            <Field
-              name='order'
-              component={ this.renderField.bind(this) }
-            />
-            <Field
-              name='genres'
-              component={ this.renderField.bind(this) }
-            />
-            <Field
-              name='keywords'
-              component={ this.renderField }
-            />
-            <button type='submit' className='btn btn-primary'>Submit</button>
-          </div>
-        </form>
+
+        <div className='form-inline'>
+          <form onSubmit={ this.handleSubmit }>
+            { this.renderFindField() }
+            { this.renderYearField() }
+            { this.renderGenresField() }
+            { this.renderOrderField() }
+            { this.renderKeywordsField() }
+            <button className='sr-only' type='submit'>ok</button>
+          </form>
+        </div>
         <ul className='list-group'>
           { this.renderMovies() }
         </ul>
@@ -149,17 +151,9 @@ class MoviesIndex extends Component {
 
 function mapStateToProps(state) {
   return {
-    movies: state.movies,
+    movies: state.movies.list,
     genres: state.genres
   }
 }
 
-function validate() {
-  const errors = {}
-  return errors;
-}
-
-export default reduxForm({
-  validate,
-  form: 'SearchMovieForm'
-})(connect(mapStateToProps, { fetchMovies, fetchLists })(MoviesIndex));
+export default connect(mapStateToProps, { fetchMovies, fetchLists, searchMovies })(MoviesIndex);
