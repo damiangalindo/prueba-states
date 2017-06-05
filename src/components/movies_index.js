@@ -28,7 +28,16 @@ class MoviesIndex extends Component {
   }
 
   handleSubmit(event) {
-    this.props.searchMovies(this.state.search);
+    const { search, keywords, order, year, genres } = this.state;
+    const criteria = {
+      with_keywords: keywords,
+      primary_release_year: year,
+      sort_by: order,
+      with_genres: genres
+    }
+
+    // this.props.searchMovies(this.state.search);
+    this.props.fetchMovies(criteria);
     this.props.fetchLists();
     event.preventDefault();
   }
@@ -98,10 +107,10 @@ class MoviesIndex extends Component {
       <div className='form-group'>
         <label>Order by</label>
         <select name='order' onChange={ this.handleChange } value={ this.state.order }>
-          <option value='pop_asc'>Popularity ascendent</option>
-          <option value='pop_desc'>Popularity descendent</option>
-          <option value='rating_asc'>Rating ascendent</option>
-          <option value='rating_desc'>Rating descendent</option>
+          <option value='popularity.asc'>Popularity ascendent</option>
+          <option value='popularity.desc'>Popularity descendent</option>
+          <option value='vote_average.asc'>Rating ascendent</option>
+          <option value='vote_average.desc'>Rating descendent</option>
         </select>
       </div>
     )

@@ -1,4 +1,6 @@
 import axios from 'axios';
+import queryString from 'query-string';
+import _ from 'lodash';
 
 export const FETCH_MOVIES = 'fetch_movies';
 export const FETCH_MOVIE = 'fetch_movie';
@@ -8,8 +10,10 @@ export const SEARCH_MOVIES = 'search_movies';
 const API_KEY = '?api_key=700fdd6812d76d59ed3111d7982bd90c'
 const ROOT_URL = 'https://api.themoviedb.org/3';
 
-export function fetchMovies(page) {
-  const request = axios.get(`${ ROOT_URL }/discover/movie${ API_KEY }&page=${ page }`);
+export function fetchMovies(filter = {}) {
+  const criteria = !_.isEmpty(filter) ? `&${ queryString.stringify(filter) }` : '';
+
+  const request = axios.get(`${ ROOT_URL }/discover/movie${ API_KEY }&page=${ 1 }${ criteria }`);
 
   return {
     type: FETCH_MOVIES,
@@ -36,9 +40,7 @@ export function fetchLists() {
 }
 
 export function searchMovies(criteria) {
-  const query = criteria;
-
-  const request = axios.get(`${ ROOT_URL }/search/movie${ API_KEY }&query=${ query }`);
+  const request = axios.get(`${ ROOT_URL }/search/movie${ API_KEY }&query=${ criteria }`);
 
   return {
     type: SEARCH_MOVIES,
