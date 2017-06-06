@@ -44,8 +44,6 @@ class MoviesShow extends Component {
     const { movie } = this.props;
     const { casts, keywords, videos } = movie;
 
-    console.log(movie)
-
     if(_.isEmpty(movie) || _.isEmpty(casts)) {
       return <div>Loading...</div>
     } else {

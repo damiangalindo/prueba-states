@@ -22,3 +22,9 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+.list-group.predicted-result {
+  max-height: 100px;
+  overflow: auto;
+  text-align: left;
+}

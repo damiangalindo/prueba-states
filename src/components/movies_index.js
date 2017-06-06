@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import _ from 'lodash';
 import { Link } from 'react-router-dom';
 import queryString from 'query-string';
+import SearchMovieBar from './search_movie_bar'
 
 class MoviesIndex extends Component {
   constructor(props) {
@@ -28,7 +29,7 @@ class MoviesIndex extends Component {
   }
 
   handleSubmit(event) {
-    const { search, keywords, order, year, genres } = this.state;
+    const { keywords, order, year, genres } = this.state;
     const criteria = {
       with_keywords: keywords,
       primary_release_year: year,
@@ -36,7 +37,6 @@ class MoviesIndex extends Component {
       with_genres: genres
     }
 
-    // this.props.searchMovies(this.state.search);
     this.props.fetchMovies(criteria);
     this.props.fetchLists();
     event.preventDefault();
@@ -139,8 +139,8 @@ class MoviesIndex extends Component {
         <h3>Movies Index</h3>
 
         <div className='form-inline'>
+          <SearchMovieBar onSearchMovieSubmit={ this.props.searchMovies } />
           <form onSubmit={ this.handleSubmit }>
-            { this.renderFindField() }
             { this.renderYearField() }
             { this.renderGenresField() }
             { this.renderOrderField() }
@@ -155,8 +155,6 @@ class MoviesIndex extends Component {
     )
   }
 }
-
-// const selector = formValueSelector('SearchMovieForm');
 
 function mapStateToProps(state) {
   return {
