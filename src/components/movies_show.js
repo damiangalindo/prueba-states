@@ -1,13 +1,29 @@
 import React, { Component } from 'react';
-import { fetchMovie } from '../actions';
-import { connect } from 'react-redux';
+import { ROOT_URL, API_KEY } from '../actions';
 import _ from 'lodash';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 class MoviesShow extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      selectedMovie: ''
+    }
+  }
+
   componentDidMount() {
     const { id } = this.props.match.params;
-    this.props.fetchMovie(id);
+
+    axios.get(`${ ROOT_URL }/movie/${ id }${ API_KEY }&append_to_response=casts,keywords,videos`).then(
+      (response) => {
+        const { data } = response;
+        this.setState({
+          selectedMovie: data
+        })
+      }
+    );
   }
 
   renderPersonal(personal) {
@@ -41,7 +57,7 @@ class MoviesShow extends Component {
   }
 
   render() {
-    const { movie } = this.props;
+    const movie = this.state.selectedMovie;
     const { casts, keywords, videos } = movie;
 
     if(_.isEmpty(movie) || _.isEmpty(casts)) {
@@ -53,20 +69,22 @@ class MoviesShow extends Component {
           <h3>Movie Show</h3>
           <div>
             <div className='col-md-12'>
-              <p className='col-md-6 pull-left'>
-                <img src={ `https://image.tmdb.org/t/p/w500${ movie.poster_path }` } alt=''/>
-              </p>
-              <p className='col-md-6 pull-right'>
-                { movie.vote_average }
-              </p>
-              <p>
-                Keywords
-                { this.renderTags(keywords.keywords) }
-              </p>
-              <p>
-                Genres
-                { this.renderTags(movie.genres) }
-              </p>
+              <div className='col-md-6 pull-left'>
+                <img src={ `https://image.tmdb.org/t/p/w342${ movie.poster_path }` } alt=''/>
+              </div>
+              <div className='col-md-6 pull-right'>
+                <p>
+                  { movie.vote_average }
+                </p>
+                <p>
+                  Keywords
+                  { this.renderTags(keywords.keywords) }
+                </p>
+                <p>
+                  Genres
+                  { this.renderTags(movie.genres) }
+                </p>
+              </div>
             </div>
             <div className='col-md-12'>
               { movie.overview }
@@ -88,10 +106,4 @@ class MoviesShow extends Component {
   }
 }
 
-function mapStateToProps(state) {
-  return {
-    movie: state.movies.selected
-  }
-}
-
-export default connect(mapStateToProps, { fetchMovie })(MoviesShow);
+export default MoviesShow;

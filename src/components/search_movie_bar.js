@@ -1,45 +1,53 @@
 import React, { Component } from 'react';
-import { searchForMovies } from '../actions';
-import { connect } from 'react-redux';
+import { ROOT_URL, API_KEY } from '../actions';
 import _ from 'lodash';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 class SearchMovieBar extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      search: ''
+      search: '',
+      predicted_movies: ''
     }
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  componentDidMount() {
-    this.props.searchForMovies();
-  }
-
   handleChange(event) {
     const { value } = event.target;
     this.setState({ search: value });
     if (value){
-      this.props.searchForMovies(value)
+      this.searchForMovies(value)
     }else {
-      this.props.searchForMovies()
+      this.searchForMovies()
     }
+  }
+
+  searchForMovies(criteria) {
+    axios.get(`${ ROOT_URL }/search/movie${ API_KEY }&query=${ criteria }`).then(
+      (response) => {
+        const { results } = response.data;
+
+        this.setState({
+          predicted_movies: results
+        })
+      }
+    )
   }
 
   handleSubmit(event) {
     const { search } = this.state;
 
     this.props.onSearchMovieSubmit(search);
-    this.props.searchForMovies()
     event.preventDefault();
   }
 
   renderPredictiveList() {
-    const { predicted_movies } = this.props;
+    const { predicted_movies } = this.state;
     if(!_.isEmpty(predicted_movies)) {
       return _.map(predicted_movies, movie => {
         return(
@@ -76,10 +84,4 @@ class SearchMovieBar extends Component {
   }
 }
 
-function mapStateToProps(state) {
-  return {
-    predicted_movies: state.movies.predicted_movies
-  }
-}
-
-export default connect(mapStateToProps, { searchForMovies })(SearchMovieBar);
+export default SearchMovieBar;

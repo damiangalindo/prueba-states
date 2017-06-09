@@ -1,31 +1,51 @@
 import React, { Component } from 'react';
-import { fetchMovies, fetchLists, searchMovies } from '../actions';
-import { connect } from 'react-redux';
+import { ROOT_URL, API_KEY } from '../actions';
 import _ from 'lodash';
 import { Link } from 'react-router-dom';
 import queryString from 'query-string';
-import SearchMovieBar from './search_movie_bar'
+import SearchMovieBar from './search_movie_bar';
+import axios from 'axios';
 
 class MoviesIndex extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      movies: {},
+      movie_genres: {},
       search: '',
       keywords: '',
-      order: 'pop_asc',
+      order: 'popularity.asc',
       year: '2016',
       genres: ''
     }
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.searchMovies = this.searchMovies.bind(this);
   }
 
   componentDidMount() {
-    const { page } = queryString.parse(this.props.location.search);
-    this.props.fetchMovies(page || 1);
-    this.props.fetchLists();
+    axios.get(`${ ROOT_URL }/genre/movie/list${ API_KEY }`).then(
+      (response) => {
+        const { genres } = response.data;
+
+        this.setState({
+          movie_genres: genres
+        })
+      }
+    )
+
+    axios.get(`${ ROOT_URL }/discover/movie${ API_KEY }`).then(
+      (response) => {
+        const { results } = response.data;
+
+        this.setState({
+          movies: results
+        })
+      }
+    )
+
   }
 
   handleSubmit(event) {
@@ -37,9 +57,33 @@ class MoviesIndex extends Component {
       with_genres: genres
     }
 
-    this.props.fetchMovies(criteria);
-    this.props.fetchLists();
+    this.searchMovies(criteria);
     event.preventDefault();
+  }
+
+  searchMovies(filter) {
+    if (!_.isObject(filter)){
+      axios.get(`${ ROOT_URL }/search/movie${ API_KEY }&query=${ filter }`).then(
+        (response) => {
+          const { results } = response.data;
+          console.log(this)
+          this.setState({
+            movies: results
+          })
+        }
+      )
+    }else{
+      const criteria = !_.isEmpty(filter) ? `&${ queryString.stringify(filter) }` : '';
+      axios.get(`${ ROOT_URL }/discover/movie${ API_KEY }${ criteria }`).then(
+        (response) => {
+          const { results } = response.data;
+
+          this.setState({
+            movies: results
+          })
+        }
+      )
+    }
   }
 
   handleChange(event) {
@@ -48,21 +92,31 @@ class MoviesIndex extends Component {
   }
 
   renderMovies(){
-    const { movies } = this.props;
+    const { movies } = this.state;
 
     if (_.isEmpty(movies)) {
       return <div>Loading...</div>
     } else {
       return _.map(movies, movie => {
-        const image = !_.isEmpty(movie.poster_path) ? `https://image.tmdb.org/t/p/w500${ movie.poster_path }` : console.log(movie.poster_path)
+        const image = !_.isEmpty(movie.poster_path) ? `https://image.tmdb.org/t/p/w154${ movie.poster_path }` : console.log(movie.poster_path)
         return(
-          <li key={ movie.id } className='list-group-item'>
-            <Link to={ `/movies/${ movie.id }` }>
-              { movie.original_title }
-            </Link>
-            { movie.vote_average }
-            <img src={ image } alt='' />
-          </li>
+          <div key={ movie.id } className='col-md-6 row'>
+            <div className='text-left'>
+              <div className='col-md-6'>
+                <img src={ image } alt='' />
+              </div>
+              <div>
+                <p>
+                  <Link to={ `/movies/${ movie.id }` }>
+                    { movie.original_title }
+                  </Link>
+                </p>
+                <p>
+                  { movie.vote_average }
+                </p>
+              </div>
+            </div>
+          </div>
         )
       })
     }
@@ -81,7 +135,7 @@ class MoviesIndex extends Component {
   }
 
   renderGenresField() {
-    const { genres } = this.props;
+    const genres = this.state.movie_genres;
 
     if (_.isEmpty(genres)) {
       return <div>Loading...</div>
@@ -136,10 +190,10 @@ class MoviesIndex extends Component {
   render() {
     return (
       <div>
-        <h3>Movies Index</h3>
+        <h3>Movies Index - with state</h3>
 
         <div className='form-inline'>
-          <SearchMovieBar onSearchMovieSubmit={ this.props.searchMovies } />
+          <SearchMovieBar onSearchMovieSubmit={ this.searchMovies } />
           <form onSubmit={ this.handleSubmit }>
             { this.renderYearField() }
             { this.renderGenresField() }
@@ -148,19 +202,12 @@ class MoviesIndex extends Component {
             <button className='sr-only' type='submit'>ok</button>
           </form>
         </div>
-        <ul className='list-group'>
+        <div className='container-fluid'>
           { this.renderMovies() }
-        </ul>
+        </div>
       </div>
     )
   }
 }
 
-function mapStateToProps(state) {
-  return {
-    movies: state.movies.list,
-    genres: state.genres
-  }
-}
-
-export default connect(mapStateToProps, { fetchMovies, fetchLists, searchMovies })(MoviesIndex);
+export default MoviesIndex;
